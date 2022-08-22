@@ -9,7 +9,14 @@ window.addEventListener('resize', () => {
     canvas.height = window.innerHeight;
 });
 
+const src = document.querySelector('body');
+let clientX;
+let clientY;
+
 let startPos = 0;
+let isHoldingDown = false;
+let color = 0;
+let hsl = 'hsl('+color+',100%,50%)';
 
 let items = [];
 
@@ -32,6 +39,7 @@ class Item {
         this.y = y;
         this.width = width;
         this.height = width;
+        this.color = hsl;
         this.yVelocity = 1;
 
         this.angel = angel;
@@ -62,7 +70,7 @@ class Item {
         
     }
     draw(){
-        c.fillStyle = "red";
+        c.fillStyle = this.color;
         c.fillRect(this.x, this.y, this.width, this.height);
     }
 }
@@ -74,9 +82,15 @@ function update(){
         items[i].draw();
     }
     checkCollisions(items);
-
+    mouseHandler();
     c.fillStyle = "black";
     c.fillRect(ground.x, ground.y, ground.width, ground.height);
+
+    color++;
+    hsl = 'hsl('+color+',100%,50%)';
+
+    console.log(clientX);
+    console.log(clientY);
 
     requestAnimationFrame(update);
 }
@@ -85,8 +99,8 @@ update();
 
 function start(){
     startPos -= 200;
-    for (let i = 0; i < 20; i++) {
-        items.push(new Item(randomNum(0, canvas.width), startPos, randomNum(30, 100), randomNum(30, 100), -80));
+    for (let i = 0; i < 1; i++) {
+        items.push(new Item(randomNum(0, canvas.width), startPos, 100, 100, -80));
     }
     
 }
@@ -128,3 +142,105 @@ function checkCollisions(arr){
     }
     
 }
+function mouseHandler(){
+    console.log(isHoldingDown);
+    if(isHoldingDown){
+
+        
+
+        for (let i = 0; i < items.length; i++) {
+            //X touching
+            if(items[i].x + items[i].width >= mouse.x && items[i].x <= mouse.x){
+                //Y touching
+                if(items[i].y + items[i].height >= mouse.y && items[i].y <= mouse.y){
+                    
+                    holdingObject = items[i];
+
+                    items[i].y = mouse.y - items[i].height/2;
+                    items[i].x = mouse.x - items[i].width/2;
+                    if(items[i].xVelocity == 1){
+                        items[i].x = mouse.x - items[i].width/2;
+                    }
+                    items[i].dy = 0;
+                    
+                }
+            }
+        }
+
+        for (let i = 0; i < items.length; i++) {
+            if(holdingObject != null && holdingObject != items[i]){
+                if(items[i].y + items[i].height >= holdingObject.y && items[i].y <= holdingObject.y + holdingObject.height){
+                    if(items[i] != holdingObject){
+                        if(holdingObject.x < items[i].x + items[i].width && holdingObject.x > items[i].x + items[i].width/3){
+                            items[i].x = holdingObject.x - items[i].width;
+                        }
+                        if(holdingObject.x + holdingObject.width > items[i].x && holdingObject.x < items[i].x + items[i].width/3){
+                            items[i].x = holdingObject.x + holdingObject.width;
+                        }
+    
+                        
+                    }
+                    
+                }
+                
+                
+                
+                // if(holdingObject.x + holdingObject.width > items[i].x && holdingObject.x < items[i].x + items[i].width){
+                //     if(holdingObject.y + holdingObject.height + 10 > items[i].y){
+                //         holdingObject.y = items[i].y - holdingObject.height;
+                //         isHoldingDown = false;
+                //         holdingObject = null;
+                //         cooldown = true;
+                //         setTimeout(function(){
+                //             cooldown = false;
+                //         }, 2000);
+                //     }
+    
+                // }
+                
+            }
+            
+        }
+
+    }else{
+        holdingObject = null;
+    }
+}
+let cooldown = false;
+
+window.addEventListener('mousemove', function(event){
+    mouse.x = event.x;
+    mouse.y = event.y;
+});
+if(!cooldown){
+    window.addEventListener('mousedown', function(e){
+        isHoldingDown = true;
+    });
+    window.addEventListener('mouseup', function(e){
+        isHoldingDown = false;
+    });
+
+    // window.addEventListener('touchstart', function(e){
+    //     isHoldingDown = true;
+    // });
+    // window.addEventListener('touchend', function(e){
+    //     isHoldingDown = false;
+    // });
+}
+
+
+
+
+src.addEventListener('touchmove', (e) => {
+    isHoldingDown = true;
+    // Cache the client X/Y coordinates
+    clientX = e.touches[0].clientX;
+    clientY = e.touches[0].clientY;
+
+    mouse.x = clientX;
+    mouse.y = clientY;
+}, false);
+
+window.addEventListener('touchend', function(e){
+        isHoldingDown = false;
+});
